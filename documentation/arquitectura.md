@@ -14,7 +14,7 @@ El objetivo es construir, desde la ingesta de datos crudos hasta los dashboards 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    FUENTES DE DATOS                                  │
-│  samples.wanderbricks (batch)     │     Apache Kafka (streaming)    │
+│  samples.wanderbricks (batch)     │   rate source (streaming)        │
 └────────────────┬────────────────────────────────┬───────────────────┘
                  │                                │
                  ▼                                ▼
@@ -68,7 +68,7 @@ El objetivo es construir, desde la ingesta de datos crudos hasta los dashboards 
 |---|---|
 | **Formato** | Delta Lake (tablas `bronze.bronze_*`) |
 | **Origen batch** | `samples.wanderbricks` (catálogo Databricks) |
-| **Origen streaming** | Apache Kafka simulado vía Confluent Cloud |
+| **Origen streaming** | Productor sintético con `rate` source de Spark Structured Streaming |
 | **Transformación** | Ninguna — copia 1:1 |
 | **Inmutabilidad** | Las tablas Bronze son la fuente de verdad histórica |
 
@@ -104,8 +104,7 @@ La dimensión de tiempo se genera dinámicamente con `SEQUENCE(MIN(check_in), MA
 | **Databricks** | Plataforma unificada de procesamiento (Spark) + almacenamiento (Delta) + analítica (SQL Warehouse). Elimina la necesidad de mover datos entre sistemas. |
 | **Delta Lake** | Combina la eficiencia de Parquet con transaccionalidad ACID, time travel y `MERGE` — todo lo que necesita un Lakehouse moderno. |
 | **Apache Spark / PySpark** | Único motor que escala desde batch a streaming sin cambios de paradigma. |
-| **Spark Structured Streaming** | Permite consumir Kafka en tiempo real con la misma API de DataFrames usada en batch. |
-| **Apache Kafka (Confluent Cloud)** | Estándar de la industria para event streaming. El tier gratuito de Confluent Cloud cubre las necesidades del proyecto sin infraestructura local. |
+| **Spark Structured Streaming** | Permite consumir streams en tiempo real con la misma API de DataFrames usada en batch. En este proyecto se usa el conector `rate` como productor sintético; migrar a Kafka requeriría solo reemplazar el `readStream.format(...)` por `kafka` con sus credenciales. |
 | **SQL Warehouse** | Punto de conexión nativo para Power BI / Tableau sin tener que mantener un clúster Spark levantado. |
 | **Power BI Desktop** | Conector nativo a Databricks, gratuito, ampliamente usado en la industria. |
 | **GitHub + Databricks Repos** | Metodología feature-branch profesional. Cada integrante trabaja en su propia rama y propio Git folder para evitar conflictos. |
@@ -149,7 +148,7 @@ Se aplica **Feature Branch Workflow** con división de responsabilidades por not
 | Integrante | Notebooks |
 |---|---|
 | Arquitectura + Silver + Gold | `04_silver_layer`, `05_gold_layer` + documentación de arquitectura |
-| Kafka + Streaming | `06_streaming_pipeline` |
+| Streaming | `06_streaming_pipeline` |
 | Power BI + documentación | `07_powerbi` + diagramas |
 
 Cada integrante trabaja en su propia rama (`feature/silver-gold`, `feature/kafka-streaming`, `feature/powerbi`) y mergea a `main` vía Pull Request.
@@ -163,7 +162,7 @@ Desde Databricks Repos, ejecutar los notebooks en este orden:
 3. `03_data_quality_analysis` — análisis de calidad sobre Bronze.
 4. `04_silver_layer` — construcción de tablas Silver limpias.
 5. `05_gold_layer` — construcción del Star Schema en Gold.
-6. `06_streaming_pipeline` — ingesta streaming desde Kafka (opcional para demo).
+6. `06_streaming_pipeline` — ingesta streaming con Spark Structured Streaming (`rate` source).
 7. `07_powerbi` — instrucciones de conexión y dashboards.
 
 Los notebooks 04 y 05 son idempotentes (`CREATE OR REPLACE TABLE`), pueden re-ejecutarse sin efectos colaterales.

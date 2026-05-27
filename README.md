@@ -8,8 +8,8 @@ Pipeline de Business Intelligence end-to-end sobre **Databricks**, implementando
 ## Arquitectura
 
 ```
-Kafka / Batch  →  Bronze  →  Silver  →  Gold (Star Schema)  →  Power BI
-                  Delta      Delta      Delta + SQL Warehouse
+Streaming / Batch  →  Bronze  →  Silver  →  Gold (Star Schema)  →  Power BI
+                      Delta      Delta      Delta + SQL Warehouse
 ```
 
 Documentación detallada: [`documentation/arquitectura.md`](documentation/arquitectura.md)
@@ -23,7 +23,7 @@ wanderbricks-lakehouse-project/
 ├── 03_data_quality_analysis.ipynb     Validaciones automatizadas sobre Bronze
 ├── 04_silver_layer.ipynb              Limpieza, casteo y deduplicación
 ├── 05_gold_layer.ipynb                Star Schema dimensional
-├── 06_streaming_pipeline.ipynb        Ingesta streaming desde Kafka
+├── 06_streaming_pipeline.ipynb        Ingesta streaming con Structured Streaming
 ├── 07_powerbi.ipynb                   Conexión y dashboards Power BI
 │
 ├── diagrams/
@@ -68,8 +68,9 @@ Diagrama: [`diagrams/star_schema.md`](diagrams/star_schema.md)
 
 - Workspace de **Databricks** (Free / Community / Workspace pago).
 - Repo conectado a Databricks Repos.
-- Para el notebook 06: cuenta en **Confluent Cloud** (tier gratuito).
 - Para el notebook 07: **Power BI Desktop** instalado localmente.
+
+El notebook 06 usa el conector `rate` de Spark Structured Streaming, por lo que no requiere ningún servicio externo (Kafka, Confluent, etc.). Funciona 100% dentro de Databricks.
 
 ### Orden de ejecución
 
@@ -80,8 +81,8 @@ Desde Databricks Repos, en cada notebook hacer **"Run all"** en este orden:
 3. `03_data_quality_analysis`
 4. `04_silver_layer`
 5. `05_gold_layer`
-6. `06_streaming_pipeline` *(opcional, requiere Kafka)*
-7. `07_powerbi` *(instrucciones de conexión)*
+6. `06_streaming_pipeline` *(usa `rate` source, sin dependencias externas)*
+7. `07_powerbi` *(instrucciones de conexión y vistas SQL para dashboards)*
 
 Los notebooks 04 y 05 usan `CREATE OR REPLACE TABLE` → son **idempotentes** y se pueden re-ejecutar sin error.
 
@@ -92,8 +93,8 @@ Feature Branch Workflow con responsabilidades divididas:
 | Rol | Notebooks | Rama |
 |---|---|---|
 | Arquitectura + Silver + Gold | 04, 05 | `feature/silver-gold` |
-| Streaming + Kafka | 06 | `feature/kafka-streaming` |
-| Power BI + Documentación | 07 | `feature/powerbi` |
+| Streaming | 06 | `feature/streaming-and-bi` |
+| Power BI + Documentación | 07 | `feature/streaming-and-bi` |
 
 Reglas:
 
@@ -109,8 +110,7 @@ Reglas:
 | **Databricks** | Plataforma central (compute + storage + analytics) |
 | **Delta Lake** | Formato de almacenamiento transaccional |
 | **Apache Spark / PySpark** | Procesamiento distribuido |
-| **Spark Structured Streaming** | Ingesta en tiempo real |
-| **Apache Kafka (Confluent Cloud)** | Bus de eventos |
+| **Spark Structured Streaming** | Ingesta en tiempo real (con `rate` source como productor sintético) |
 | **Databricks SQL Warehouse** | Motor de consulta para BI |
 | **Power BI Desktop** | Visualización ejecutiva |
 | **GitHub + Databricks Repos** | Control de versiones colaborativo |
