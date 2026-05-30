@@ -1,0 +1,24 @@
+# Plantilla de profiles.yml para conectar dbt a Databricks
+#
+# INSTRUCCIONES:
+# 1. Copia este archivo a ~/.dbt/profiles.yml  (Linux/Mac)
+#    o a %USERPROFILE%\.dbt\profiles.yml  (Windows)
+# 2. Rellena los 3 valores marcados con < ... >
+# 3. NO subas el profiles.yml real al repositorio (ya está en .gitignore)
+#
+# Los valores se obtienen desde Databricks:
+# - host:       SQL Warehouses → tu warehouse → Connection details → Server hostname
+# - http_path:  SQL Warehouses → tu warehouse → Connection details → HTTP path
+# - token:      User Settings → Developer → Access tokens → Generate new token
+
+wanderbricks:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      catalog: workspace                     # Unity Catalog catalog donde viven los schemas
+      schema: silver                         # Schema por defecto si un modelo no lo override
+      host: <your-databricks-hostname>       # ej. dbc-xxxxxx.cloud.databricks.com
+      http_path: <your-sql-warehouse-path>   # ej. /sql/1.0/warehouses/abc123def456
+      token: <your-personal-access-token>    # PAT generado en Databricks
+      threads: 4

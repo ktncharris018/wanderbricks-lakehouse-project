@@ -1,0 +1,71 @@
+version: 2
+
+# Exposures — vinculan los modelos dbt a los dashboards que los consumen.
+# Se renderizan en dbt docs como nodos terminales del DAG de linaje.
+# Cumple la sección 3.4 del PDF oficial: "Documentar los modelos como dbt Exposures
+# para indicar qué dashboards los consumen."
+
+exposures:
+
+  - name: dashboard_executive_overview
+    label: "Dashboard 1 — Executive Overview"
+    type: dashboard
+    maturity: high
+    url: "https://app.powerbi.com/groups/me/reports/wanderbricks-executive"
+    description: |
+      KPIs ejecutivos, tendencias temporales y ranking de destinos por ingresos.
+      Audiencia: alta gerencia.
+    depends_on:
+      - ref('gold_fact_reservas')
+      - ref('gold_dim_destinations')
+      - ref('gold_dim_time')
+    owner:
+      name: "Equipo BI Wanderbricks"
+      email: "bi@wanderbricks.example"
+
+  - name: dashboard_operational_deep_dive
+    label: "Dashboard 2 — Operational Deep Dive"
+    type: dashboard
+    maturity: high
+    url: "https://app.powerbi.com/groups/me/reports/wanderbricks-operational"
+    description: |
+      Drill-down operacional por país → destino → propiedad → reserva.
+      Incluye análisis ABC tipo Pareto sobre propiedades.
+    depends_on:
+      - ref('gold_fact_reservas')
+      - ref('gold_dim_users')
+      - ref('gold_dim_properties')
+      - ref('gold_dim_destinations')
+      - ref('gold_dim_time')
+    owner:
+      name: "Equipo BI Wanderbricks"
+      email: "bi@wanderbricks.example"
+
+  - name: dashboard_customer_revenue
+    label: "Dashboard 3 — Customer & Revenue Analytics"
+    type: dashboard
+    maturity: high
+    url: "https://app.powerbi.com/groups/me/reports/wanderbricks-customer"
+    description: |
+      Segmentación RFM de usuarios (Champions, At Risk, Hibernating...),
+      análisis de cohortes por mes de registro, LTV por país.
+    depends_on:
+      - ref('gold_fact_reservas')
+      - ref('gold_dim_users')
+    owner:
+      name: "Equipo BI Wanderbricks"
+      email: "bi@wanderbricks.example"
+
+  - name: dashboard_data_quality
+    label: "Dashboard 4 — Data Quality & Pipeline Health"
+    type: dashboard
+    maturity: high
+    url: "https://app.powerbi.com/groups/me/reports/wanderbricks-quality"
+    description: |
+      Retención Bronze→Silver por entidad, frescura de datos, anomalías
+      financieras (reservas sin pago, montos atípicos).
+    depends_on:
+      - ref('gold_fact_reservas')
+    owner:
+      name: "Equipo BI Wanderbricks"
+      email: "bi@wanderbricks.example"

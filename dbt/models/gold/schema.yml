@@ -1,0 +1,118 @@
+version: 2
+
+# Tests y documentación de los modelos Gold.
+# Las relationships validan la integridad referencial del Star Schema completo.
+
+models:
+
+  - name: gold_dim_users
+    description: "Dimensión de usuarios para el Star Schema."
+    columns:
+      - name: user_key
+        description: "Surrogate key de la dimensión."
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "PK natural del usuario."
+        tests:
+          - not_null
+          - unique
+
+  - name: gold_dim_properties
+    description: "Dimensión de propiedades."
+    columns:
+      - name: property_key
+        description: "Surrogate key de la dimensión."
+        tests:
+          - not_null
+          - unique
+      - name: property_id
+        tests:
+          - not_null
+          - unique
+
+  - name: gold_dim_destinations
+    description: "Dimensión geográfica de destinos."
+    columns:
+      - name: destination_key
+        description: "Surrogate key de la dimensión."
+        tests:
+          - not_null
+          - unique
+      - name: destination_id
+        tests:
+          - not_null
+          - unique
+      - name: country
+        tests:
+          - not_null
+
+  - name: gold_dim_time
+    description: "Dimensión temporal generada con SEQUENCE desde el rango real de reservas."
+    columns:
+      - name: tiempo_id
+        description: "PK de la dimensión temporal (fecha)."
+        tests:
+          - not_null
+          - unique
+      - name: year
+        tests:
+          - not_null
+      - name: month
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - name: is_weekend
+        tests:
+          - not_null
+
+  - name: gold_fact_reservas
+    description: |
+      Tabla de hechos central del Star Schema. Grano: una fila por reserva.
+      Las llaves foráneas tienen tests de relationships contra sus dimensiones.
+    columns:
+      - name: booking_id
+        description: "PK de la reserva."
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "FK a gold_dim_users.user_key"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('gold_dim_users')
+              field: user_key
+      - name: property_id
+        description: "FK a gold_dim_properties.property_key"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('gold_dim_properties')
+              field: property_key
+      - name: tiempo_id
+        description: "FK a gold_dim_time.tiempo_id"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('gold_dim_time')
+              field: tiempo_id
+      - name: total_amount
+        description: "Métrica — importe total de la reserva."
+        tests:
+          - not_null
+      - name: total_nights
+        description: "Métrica — noches reservadas."
+        tests:
+          - not_null
+      - name: payment_amount
+        description: "Métrica — suma de pagos completados."
+        tests:
+          - not_null
+      - name: booking_status
+        description: "Estado de la reserva."
+        tests:
+          - accepted_values:
+              values: ['confirmed', 'pending', 'cancelled']
