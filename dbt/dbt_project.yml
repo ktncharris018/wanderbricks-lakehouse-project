@@ -1,0 +1,56 @@
+# Proyecto dbt — Wanderbricks Lakehouse
+# Implementa los modelos Silver y Gold como capa dbt sobre Databricks,
+# cumpliendo la sección 3.3 del PDF oficial del proyecto.
+#
+# Los modelos aquí definidos son funcionalmente equivalentes a los notebooks
+# 04_silver_layer.ipynb y 05_gold_layer.ipynb. Esta capa dbt aporta:
+#   - Versionado declarativo en SQL puro
+#   - Tests automáticos de calidad (not_null, unique, accepted_values, relationships)
+#   - Linaje de datos automático (dbt docs generate)
+#   - Documentación inline de cada modelo y columna
+#
+# Para ejecutar:
+#   cd dbt/
+#   dbt deps          # instala dependencias (si las hubiera)
+#   dbt run           # construye todos los modelos
+#   dbt test          # ejecuta los tests
+#   dbt docs generate # genera el linaje
+#   dbt docs serve    # abre el portal de documentación en localhost
+
+name: 'wanderbricks'
+version: '1.0.0'
+config-version: 2
+
+# Perfil de conexión — debe coincidir con un perfil definido en ~/.dbt/profiles.yml
+# Ver profiles.example.yml en esta carpeta para la plantilla.
+profile: 'wanderbricks'
+
+# Rutas de configuración del proyecto
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Configuración de materialización por capa
+models:
+  wanderbricks:
+    silver:
+      +materialized: table
+      +schema: silver
+      +file_format: delta
+    gold:
+      +materialized: table
+      +schema: gold
+      +file_format: delta
+
+# Variables del proyecto
+vars:
+  # Catálogo Unity Catalog donde viven los schemas bronze/silver/gold
+  catalog_name: 'workspace'
+  bronze_schema: 'bronze'

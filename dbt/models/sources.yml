@@ -1,0 +1,54 @@
+version: 2
+
+# Fuentes Bronze — tablas crudas creadas por el notebook 02_bronze_layer.ipynb
+# Permiten que dbt construya el linaje completo: bronze → silver → gold.
+# Se referencian en los modelos Silver como {{ source('bronze', 'bronze_<entidad>') }}.
+
+sources:
+  - name: bronze
+    description: "Capa Bronze — datos crudos copiados de samples.wanderbricks. Inmutable."
+    schema: bronze
+    tables:
+      - name: bronze_bookings
+        description: "Reservas crudas desde samples.wanderbricks.bookings"
+        columns:
+          - name: booking_id
+            description: "Identificador único de reserva"
+          - name: user_id
+            description: "FK a usuario que realiza la reserva"
+          - name: property_id
+            description: "FK a propiedad reservada"
+
+      - name: bronze_users
+        description: "Usuarios crudos desde samples.wanderbricks.users"
+        columns:
+          - name: user_id
+            description: "Identificador único de usuario"
+
+      - name: bronze_properties
+        description: "Propiedades crudas desde samples.wanderbricks.properties"
+        columns:
+          - name: property_id
+            description: "Identificador único de propiedad"
+          - name: destination_id
+            description: "FK a destino geográfico"
+
+      - name: bronze_destinations
+        description: "Destinos crudos desde samples.wanderbricks.destinations"
+        columns:
+          - name: destination_id
+            description: "Identificador único de destino"
+
+      - name: bronze_payments
+        description: "Pagos crudos desde samples.wanderbricks.payments"
+        columns:
+          - name: payment_id
+            description: "Identificador único de pago"
+          - name: booking_id
+            description: "FK a la reserva pagada"
+
+      - name: bronze_reviews
+        description: "Reseñas crudas desde samples.wanderbricks.reviews"
+        columns:
+          - name: review_id
+            description: "Identificador único de reseña"

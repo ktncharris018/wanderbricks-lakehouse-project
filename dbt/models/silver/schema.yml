@@ -1,0 +1,162 @@
+version: 2
+
+# Tests y documentación de los modelos Silver.
+# Cubre los 4 tipos de tests pedidos por el PDF (sección 3.3):
+#   - not_null
+#   - unique
+#   - accepted_values
+#   - relationships
+
+models:
+
+  - name: silver_users
+    description: "Usuarios limpios, deduplicados y tipificados desde Bronze."
+    columns:
+      - name: user_id
+        description: "PK del usuario."
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: "Email del usuario (con TRIM)."
+        tests:
+          - not_null
+      - name: user_type
+        description: "Tipo de usuario."
+        tests:
+          - accepted_values:
+              values: ['individual', 'business']
+      - name: is_business
+        description: "Bandera de cuenta empresarial."
+        tests:
+          - not_null
+
+  - name: silver_destinations
+    description: "Destinos turísticos limpios."
+    columns:
+      - name: destination_id
+        description: "PK del destino."
+        tests:
+          - not_null
+          - unique
+      - name: country
+        description: "País del destino."
+        tests:
+          - not_null
+
+  - name: silver_properties
+    description: "Propiedades limpias con filtros de validez (base_price > 0, max_guests > 0)."
+    columns:
+      - name: property_id
+        description: "PK de la propiedad."
+        tests:
+          - not_null
+          - unique
+      - name: destination_id
+        description: "FK al destino donde se ubica la propiedad."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_destinations')
+              field: destination_id
+      - name: base_price
+        description: "Precio base por noche (> 0)."
+        tests:
+          - not_null
+      - name: max_guests
+        description: "Capacidad máxima de huéspedes (> 0)."
+        tests:
+          - not_null
+
+  - name: silver_bookings
+    description: "Reservas limpias con total_nights derivado. Filtros: total_amount > 0, check_out > check_in."
+    columns:
+      - name: booking_id
+        description: "PK de la reserva."
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "FK al usuario que reservó."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_users')
+              field: user_id
+      - name: property_id
+        description: "FK a la propiedad reservada."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_properties')
+              field: property_id
+      - name: status
+        description: "Estado de la reserva."
+        tests:
+          - accepted_values:
+              values: ['confirmed', 'pending', 'cancelled']
+      - name: total_nights
+        description: "Noches reservadas — DATEDIFF(check_out, check_in)."
+        tests:
+          - not_null
+      - name: total_amount
+        description: "Importe total de la reserva (> 0)."
+        tests:
+          - not_null
+
+  - name: silver_payments
+    description: "Pagos limpios con filtro amount > 0."
+    columns:
+      - name: payment_id
+        description: "PK del pago."
+        tests:
+          - not_null
+          - unique
+      - name: booking_id
+        description: "FK a la reserva pagada."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_bookings')
+              field: booking_id
+      - name: payment_method
+        description: "Método de pago."
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'paypal', 'bank_transfer']
+      - name: status
+        description: "Estado del pago."
+        tests:
+          - accepted_values:
+              values: ['completed', 'pending', 'failed', 'refunded']
+      - name: amount
+        description: "Monto del pago (> 0)."
+        tests:
+          - not_null
+
+  - name: silver_reviews
+    description: "Reseñas con filtros is_deleted = false y rating entre 0 y 5."
+    columns:
+      - name: review_id
+        description: "PK de la reseña."
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "FK al usuario autor."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_users')
+              field: user_id
+      - name: property_id
+        description: "FK a la propiedad evaluada."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_properties')
+              field: property_id
+      - name: rating
+        description: "Calificación entre 0 y 5."
+        tests:
+          - not_null

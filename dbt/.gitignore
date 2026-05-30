@@ -1,0 +1,9 @@
+# dbt
+target/
+dbt_packages/
+logs/
+*.duckdb
+
+# Credenciales sensibles
+profiles.yml
+.user.yml
