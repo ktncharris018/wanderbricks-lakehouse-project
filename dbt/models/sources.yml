@@ -7,6 +7,7 @@ version: 2
 sources:
   - name: bronze
     description: "Capa Bronze — datos crudos copiados de samples.wanderbricks. Inmutable."
+    catalog: workspace
     schema: bronze
     tables:
       - name: bronze_bookings
