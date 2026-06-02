@@ -9,10 +9,8 @@
 -- silver_bookings — reservas limpias con columna derivada total_nights
 -- Filtros de validez: total_amount > 0, check_out > check_in
 --
--- NOTA: la cláusula `booking_id < 1000000000` excluye las filas amplificadas
--- sintéticamente en Bronze (las copias usan offset numérico n * 10^9).
--- Bronze conserva 72M registros para demostrar escala del pipeline;
--- Silver/Gold procesan únicamente los 72k registros originales.
+-- Procesa los 72M registros amplificados de Bronze para que Silver/Gold
+-- y los dashboards reflejen la escala completa del pipeline.
 
 WITH dedup AS (
   SELECT
@@ -23,7 +21,6 @@ WITH dedup AS (
     ) AS rn
   FROM {{ source('bronze', 'bronze_bookings') }}
   WHERE booking_id IS NOT NULL
-    AND CAST(booking_id AS BIGINT) < 1000000000
 )
 
 SELECT

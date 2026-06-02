@@ -9,8 +9,7 @@
 -- silver_reviews — reseñas limpias
 -- Filtros de validez: is_deleted = false, rating entre 0 y 5
 --
--- NOTA: la cláusula `review_id < 1000000000` excluye las filas amplificadas
--- sintéticamente en Bronze (las copias usan offset numérico n * 10^9).
+-- Procesa las reviews amplificadas en Bronze para reflejar la escala del pipeline.
 
 WITH dedup AS (
   SELECT
@@ -21,7 +20,6 @@ WITH dedup AS (
     ) AS rn
   FROM {{ source('bronze', 'bronze_reviews') }}
   WHERE review_id IS NOT NULL
-    AND CAST(review_id AS BIGINT) < 1000000000
 )
 
 SELECT
