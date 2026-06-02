@@ -9,8 +9,7 @@
 -- silver_payments — pagos limpios
 -- Filtro de validez: amount > 0
 --
--- NOTA: la cláusula `payment_id < 1000000000` excluye las filas amplificadas
--- sintéticamente en Bronze (las copias usan offset numérico n * 10^9).
+-- Procesa los pagos amplificados en Bronze para reflejar la escala del pipeline.
 
 WITH dedup AS (
   SELECT
@@ -21,7 +20,6 @@ WITH dedup AS (
     ) AS rn
   FROM {{ source('bronze', 'bronze_payments') }}
   WHERE payment_id IS NOT NULL
-    AND CAST(payment_id AS BIGINT) < 1000000000
 )
 
 SELECT
